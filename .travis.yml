@@ -15,15 +15,13 @@ install:
 
 before_script:
 - sudo docker login --email "${DOCKER_EMAIL}" --password "${DOCKER_PASSWORD}" --username "${DOCKER_USER}" "${DOCKER_REGISTRY}"
-- npm config set registry "${NPM_REGISTRY}"
-- npm install
 
 #script:
 #- echo script
 
 after_script:
 - export DOCKER_IMAGE_NAME=${DOCKER_REGISTRY}/${DOCKER_USER}/djbdns
-- sudo docker build --build-arg "NPM_REGISTRY=${NPM_REGISTRY}" -t "${DOCKER_IMAGE_NAME}" .
+- sudo docker build -t "${DOCKER_IMAGE_NAME}" .
 - sudo docker push "${DOCKER_IMAGE_NAME}"
 - \[ -n "${TRAVIS_TAG}" \] && sudo docker tag "${DOCKER_IMAGE_NAME}" "${DOCKER_IMAGE_NAME}:${TRAVIS_TAG}" && sudo docker push "${DOCKER_IMAGE_NAME}:${TRAVIS_TAG}"
 
