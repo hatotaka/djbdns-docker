@@ -1,0 +1,29 @@
+sudo: require
+
+language: default
+
+services:
+- docker
+
+install:
+- sudo mkdir -p "/etc/docker/certs.d/${DOCKER_REGISTRY}/"
+- curl -s -d "{\"domain\":\"${CFSSL_TARGET_DOMAIN}\"}" "http://${CFSSL_DOMAIN}/api/v1/cfssl/info" |jq -r .result.certificate |sudo tee "/etc/docker/certs.d/${DOCKER_REGISTRY}/ca.crt"
+- sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+- echo "deb https://apt.dockerproject.org/repo ubuntu-precise main" | sudo tee /etc/apt/sources.list.d/docker.list
+- sudo apt-get update
+- sudo apt-get install docker-engine
+
+before_script:
+- sudo docker login --email "${DOCKER_EMAIL}" --password "${DOCKER_PASSWORD}" --username "${DOCKER_USER}" "${DOCKER_REGISTRY}"
+- npm config set registry "${NPM_REGISTRY}"
+- npm install
+
+#script:
+#- echo script
+
+after_script:
+- export DOCKER_IMAGE_NAME=${DOCKER_REGISTRY}/${DOCKER_USER}/djbdns
+- sudo docker build --build-arg "NPM_REGISTRY=${NPM_REGISTRY}" -t "${DOCKER_IMAGE_NAME}" .
+- sudo docker push "${DOCKER_IMAGE_NAME}"
+- \[ -n "${TRAVIS_TAG}" \] && sudo docker tag "${DOCKER_IMAGE_NAME}" "${DOCKER_IMAGE_NAME}:${TRAVIS_TAG}" && sudo docker push "${DOCKER_IMAGE_NAME}:${TRAVIS_TAG}"
+
