@@ -16,12 +16,16 @@ install:
 before_script:
 - sudo docker login --email "${DOCKER_EMAIL}" --password "${DOCKER_PASSWORD}" --username "${DOCKER_USER}" "${DOCKER_REGISTRY}"
 
-#script:
-#- echo script
+script:
+- echo script
 
-after_script:
+before_deploy:
 - export DOCKER_IMAGE_NAME=${DOCKER_REGISTRY}/${DOCKER_USER}/djbdns
 - sudo docker build -t "${DOCKER_IMAGE_NAME}" .
-- sudo docker push "${DOCKER_IMAGE_NAME}"
-- \[ -n "${TRAVIS_TAG}" \] && sudo docker tag "${DOCKER_IMAGE_NAME}" "${DOCKER_IMAGE_NAME}:${TRAVIS_TAG}" && sudo docker push "${DOCKER_IMAGE_NAME}:${TRAVIS_TAG}"
+
+deploy:
+- provider: script
+  script:
+  - sudo docker push "${DOCKER_IMAGE_NAME}"
+  - \[ -n "${TRAVIS_TAG}" \] && sudo docker tag "${DOCKER_IMAGE_NAME}" "${DOCKER_IMAGE_NAME}:${TRAVIS_TAG}" && sudo docker push "${DOCKER_IMAGE_NAME}:${TRAVIS_TAG}"
 
